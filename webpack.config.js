@@ -1,50 +1,42 @@
 const webpack = require('webpack');
 const { resolve } = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { merge } = require('webpack-merge');
+const webpackMerge = require('webpack-merge');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 const modeConfig = env => require(`./build-utils/webpack.${env.mode}.js`)(env);
 const loadPresets = require('./build-utils/loadPresets');
 
 const webcomponentsjs = './node_modules/@webcomponents/webcomponentsjs';
 
-
-const myGlobOptions = {
-  ignore: ['.DS_Store']
-};
-
 const polyfills = [
   {
     from: resolve(`${webcomponentsjs}/webcomponents-*.{js,map}`),
-    to: 'vendor/[name][ext]',
-    globOptions: myGlobOptions
+    to: 'vendor',
+    flatten: true
   },
   {
     from: resolve(`${webcomponentsjs}/bundles/*.{js,map}`),
-    to: 'vendor/bundles/[name][ext]',
-    globOptions: myGlobOptions
+    to: 'vendor/bundles',
+    flatten: true
   },
   {
     from: resolve(`${webcomponentsjs}/custom-elements-es5-adapter.js`),
-    to: 'vendor/[name][ext]',
-    globOptions: myGlobOptions
+    to: 'vendor',
+    flatten: true
   }
 ];
 
 const assets = [
   {
     from: 'src/img',
-    to: 'img/',
-    globOptions: myGlobOptions
+    to: 'img/'
   }
 ];
 
 const plugins = [
-  new CleanWebpackPlugin({
-    cleanAfterEveryBuildPatterns: ['dist']
-  }),
+  new CleanWebpackPlugin(['dist']),
   new webpack.ProgressPlugin(),
   new HtmlWebpackPlugin({
     filename: 'index.html',
@@ -55,14 +47,13 @@ const plugins = [
       minifyJS: true
     }
   }),
-
-  new CopyWebpackPlugin({
-    patterns: [...polyfills, ...assets]
+  new CopyWebpackPlugin([...polyfills, ...assets], {
+    ignore: ['.DS_Store']
   })
 ];
 
 module.exports = ({ mode, presets }) => {
-  return merge(
+  return webpackMerge(
     {
       mode,
       output: {
